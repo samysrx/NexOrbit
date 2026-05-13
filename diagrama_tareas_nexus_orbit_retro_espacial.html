@@ -1,0 +1,3563 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nexus Orbit - Timeline retro espacial</title>
+
+  <style>
+    :root {
+      --green: #00ff66;
+      --green-soft: rgba(0, 255, 102, .18);
+      --pink: #ff00f5;
+      --cyan: #00d4ff;
+      --yellow: #ffd000;
+      --orange: #ff7a00;
+      --dark: #02030a;
+      --panel: rgba(2, 8, 18, .88);
+      --panel-2: rgba(6, 16, 34, .76);
+      --grid: rgba(0, 255, 102, .13);
+      --text: #eafff4;
+      --muted: #7d8a96;
+      --left-col: 445px;
+      --right-col: 84px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "Courier New", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background:
+        radial-gradient(circle at 16% 20%, rgba(0, 255, 102, .16), transparent 16%),
+        radial-gradient(circle at 82% 18%, rgba(255, 0, 245, .14), transparent 18%),
+        radial-gradient(circle at 48% 86%, rgba(0, 212, 255, .13), transparent 22%),
+        linear-gradient(180deg, #000 0%, #02030a 45%, #01040a 100%);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(0,255,102,.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,102,.08) 1px, transparent 1px);
+      background-size: 42px 42px;
+      opacity: .35;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,.8), rgba(0,0,0,.12));
+      z-index: 0;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          rgba(255,255,255,.035) 0,
+          rgba(255,255,255,.035) 1px,
+          transparent 1px,
+          transparent 4px
+        );
+      mix-blend-mode: overlay;
+      opacity: .36;
+      z-index: 100;
+    }
+
+    .stars,
+    .shooting-stars {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: white;
+      border-radius: 50%;
+      opacity: .85;
+      animation: fall linear infinite;
+      box-shadow: 0 0 8px white;
+    }
+
+    .star.big {
+      width: 3px;
+      height: 3px;
+      background: var(--green);
+      box-shadow: 0 0 12px var(--green);
+    }
+
+    @keyframes fall {
+      from { transform: translateY(-10vh); }
+      to { transform: translateY(115vh); }
+    }
+
+    .meteor {
+      position: absolute;
+      width: 110px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cyan), white);
+      transform: rotate(-18deg);
+      opacity: 0;
+      animation: meteor 7s linear infinite;
+      filter: drop-shadow(0 0 8px var(--cyan));
+    }
+
+    .meteor:nth-child(1) { left: 18%; top: 18%; animation-delay: 1s; }
+    .meteor:nth-child(2) { left: 67%; top: 35%; animation-delay: 4.4s; }
+    .meteor:nth-child(3) { left: 42%; top: 8%; animation-delay: 7.2s; }
+
+    @keyframes meteor {
+      0% { transform: translate(0,0) rotate(-18deg); opacity: 0; }
+      10% { opacity: 1; }
+      28% { transform: translate(360px, 120px) rotate(-18deg); opacity: 0; }
+      100% { opacity: 0; }
+    }
+
+    .arcade-shell {
+      position: relative;
+      z-index: 2;
+      width: min(1660px, calc(100% - 36px));
+      margin: 0 auto;
+      padding: 22px 0 58px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 80;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 16px 22px;
+      margin-bottom: 24px;
+      border: 1px solid rgba(0,255,102,.58);
+      background: rgba(0, 0, 0, .78);
+      box-shadow:
+        0 0 0 2px rgba(0,255,102,.05) inset,
+        0 0 26px rgba(0,255,102,.25);
+      backdrop-filter: blur(12px);
+    }
+
+    .logo {
+      font-size: clamp(20px, 2vw, 30px);
+      font-weight: 950;
+      letter-spacing: .10em;
+      color: var(--green);
+      text-shadow:
+        0 0 6px var(--green),
+        0 0 18px rgba(0,255,102,.75);
+      white-space: nowrap;
+    }
+
+    .logo span {
+      color: var(--pink);
+      text-shadow:
+        0 0 6px var(--pink),
+        0 0 18px rgba(255,0,245,.70);
+    }
+
+    .nav {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .nav-filter {
+      border: 0;
+      cursor: pointer;
+      color: #8f97a3;
+      background: transparent;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 950;
+      letter-spacing: .14em;
+      padding: 7px 4px;
+      text-transform: uppercase;
+      transition: color .18s ease, text-shadow .18s ease;
+    }
+
+    .nav-filter.active,
+    .nav-filter:hover {
+      color: var(--green);
+      text-shadow: 0 0 10px var(--green);
+      border-bottom: 2px solid var(--green);
+    }
+
+    .team-nav-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 34px;
+      padding: 8px 13px;
+      border: 1px solid rgba(0,212,255,.46);
+      color: var(--cyan);
+      background: rgba(0,212,255,.08);
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing: .14em;
+      text-decoration: none;
+      text-transform: uppercase;
+      box-shadow:
+        inset 0 0 14px rgba(0,212,255,.08),
+        0 0 16px rgba(0,212,255,.12);
+      transition: color .18s ease, border-color .18s ease, box-shadow .18s ease;
+      white-space: nowrap;
+    }
+
+    .team-nav-button:hover {
+      color: #00121a;
+      border-color: var(--cyan);
+      background: var(--cyan);
+      box-shadow: 0 0 20px rgba(0,212,255,.46);
+    }
+
+    .hud {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      white-space: nowrap;
+    }
+
+    .hud-box {
+      border: 1px solid rgba(0,212,255,.42);
+      color: var(--cyan);
+      background: rgba(0,212,255,.08);
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing: .10em;
+    }
+
+    .hud-box.pink {
+      border-color: rgba(255,0,245,.42);
+      color: var(--pink);
+      background: rgba(255,0,245,.08);
+    }
+
+    .hero {
+      position: relative;
+      min-height: 430px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      overflow: hidden;
+      border: 1px solid rgba(0,255,102,.33);
+      background:
+        linear-gradient(180deg, rgba(0,255,102,.08), transparent 24%, rgba(255,0,245,.05)),
+        rgba(0,0,0,.48);
+      box-shadow: 0 0 42px rgba(0,255,102,.15) inset;
+      margin-bottom: 22px;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to bottom, transparent 0 50%, rgba(0,255,102,.14) 50% 51%, transparent 51%),
+        linear-gradient(to right, transparent 0 50%, rgba(255,0,245,.12) 50% 51%, transparent 51%);
+      background-size: 160px 160px;
+      opacity: .24;
+    }
+
+    .alien {
+      position: absolute;
+      font-size: 36px;
+      color: var(--green);
+      text-shadow: 0 0 16px var(--green);
+      opacity: .65;
+      animation: float 4s ease-in-out infinite;
+    }
+
+    .alien.a1 { left: 8%; top: 22%; color: var(--green); }
+    .alien.a2 { left: 16%; top: 66%; color: var(--yellow); animation-delay: .8s; }
+    .alien.a3 { right: 12%; top: 28%; color: var(--pink); animation-delay: 1.4s; }
+    .alien.a4 { right: 22%; bottom: 14%; color: var(--cyan); animation-delay: 2s; }
+
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-14px); }
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 2;
+      padding: 40px 18px;
+    }
+
+    .welcome {
+      margin: 0 0 18px;
+      color: var(--green);
+      font-size: 14px;
+      font-weight: 950;
+      letter-spacing: .34em;
+      text-transform: uppercase;
+      text-shadow: 0 0 12px var(--green);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(52px, 8vw, 118px);
+      line-height: .82;
+      letter-spacing: .04em;
+      color: var(--green);
+      text-transform: uppercase;
+      text-shadow:
+        0 0 6px var(--green),
+        0 0 20px rgba(0,255,102,.88),
+        0 0 48px rgba(0,255,102,.50);
+    }
+
+    h1 span {
+      display: block;
+      color: var(--pink);
+      text-shadow:
+        0 0 6px var(--pink),
+        0 0 22px rgba(255,0,245,.92),
+        0 0 52px rgba(255,0,245,.52);
+    }
+
+    .hero-subtitle {
+      margin: 30px auto 0;
+      max-width: 760px;
+      color: #9aa0aa;
+      font-size: clamp(14px, 1.4vw, 21px);
+      line-height: 1.45;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .start-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      margin-top: 34px;
+      min-width: min(620px, 92vw);
+      padding: 22px 30px;
+      color: #001407;
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          rgba(255,255,255,.24) 0,
+          rgba(255,255,255,.24) 1px,
+          transparent 1px,
+          transparent 4px
+        ),
+        var(--green);
+      border: 0;
+      font: inherit;
+      font-size: clamp(18px, 2.2vw, 28px);
+      font-weight: 950;
+      letter-spacing: .17em;
+      text-transform: uppercase;
+      box-shadow:
+        0 0 20px rgba(0,255,102,.58),
+        0 0 52px rgba(0,255,102,.22);
+    }
+
+    .pilot-line {
+      margin-top: 24px;
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 950;
+      letter-spacing: .16em;
+      text-shadow: 0 0 12px var(--green);
+    }
+
+    .team-section {
+      display: none;
+      position: relative;
+      overflow: hidden;
+      scroll-margin-top: 104px;
+      min-height: calc(100vh - 130px);
+      margin: 18px 0 30px;
+      border: 1px solid rgba(0,212,255,.34);
+      background:
+        linear-gradient(135deg, rgba(0,212,255,.11), transparent 34%),
+        linear-gradient(315deg, rgba(255,0,245,.09), transparent 42%),
+        rgba(0,0,0,.64);
+      box-shadow:
+        inset 0 0 34px rgba(0,212,255,.08),
+        0 0 30px rgba(0,212,255,.10);
+    }
+
+    body.team-view .team-section {
+      display: block;
+    }
+
+    body.team-view .hero,
+    body.team-view .dashboard,
+    body.team-view .controls,
+    body.team-view .legend,
+    body.team-view .axis-head,
+    body.team-view .sector,
+    body.team-view .empty,
+    body.team-view .footer {
+      display: none;
+    }
+
+    body.team-view .team-nav-button {
+      color: #00121a;
+      border-color: var(--cyan);
+      background: var(--cyan);
+      box-shadow: 0 0 20px rgba(0,212,255,.46);
+    }
+
+    .team-section::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          transparent 0,
+          transparent 13px,
+          rgba(0,212,255,.08) 13px,
+          rgba(0,212,255,.08) 14px
+        );
+      opacity: .56;
+    }
+
+    .team-section::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--cyan), var(--green), var(--pink), var(--yellow));
+      box-shadow: 0 0 20px rgba(0,212,255,.38);
+    }
+
+    .team-inner {
+      position: relative;
+      z-index: 2;
+      padding: 24px;
+    }
+
+    .team-heading {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: end;
+      margin-bottom: 18px;
+    }
+
+    .team-actions {
+      display: flex;
+      align-items: stretch;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .team-feature {
+      display: grid;
+      grid-template-columns: minmax(0, 1.65fr) minmax(280px, .75fr);
+      gap: 18px;
+      align-items: stretch;
+      margin-bottom: 18px;
+      border: 1px solid rgba(255,0,245,.30);
+      background:
+        linear-gradient(135deg, rgba(255,0,245,.10), transparent 48%),
+        rgba(0,0,0,.42);
+      padding: 14px;
+      box-shadow:
+        inset 0 0 22px rgba(255,0,245,.06),
+        0 0 26px rgba(255,0,245,.08);
+    }
+
+    .team-main-image {
+      position: relative;
+      min-height: 330px;
+      margin: 0;
+      overflow: hidden;
+      border: 1px solid rgba(0,212,255,.38);
+      background: rgba(0,0,0,.50);
+      box-shadow: 0 0 22px rgba(0,212,255,.12);
+    }
+
+    .team-carousel {
+      position: relative;
+      height: 100%;
+      min-height: 330px;
+    }
+
+    .carousel-slide {
+      display: none;
+      height: 100%;
+      min-height: 330px;
+    }
+
+    .carousel-slide.active {
+      display: block;
+    }
+
+    .carousel-control {
+      position: absolute;
+      top: 50%;
+      z-index: 6;
+      transform: translateY(-50%);
+      border: 1px solid rgba(0,212,255,.52);
+      color: var(--cyan);
+      background: rgba(0,0,0,.72);
+      padding: 10px 12px;
+      font: inherit;
+      font-size: 11px;
+      font-weight: 950;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow:
+        inset 0 0 14px rgba(0,212,255,.10),
+        0 0 18px rgba(0,212,255,.16);
+    }
+
+    .carousel-control:hover {
+      color: #00121a;
+      background: var(--cyan);
+      box-shadow: 0 0 20px rgba(0,212,255,.46);
+    }
+
+    .carousel-control.prev {
+      left: 12px;
+    }
+
+    .carousel-control.next {
+      right: 12px;
+    }
+
+    .carousel-dots {
+      position: absolute;
+      left: 50%;
+      bottom: 14px;
+      z-index: 6;
+      display: flex;
+      gap: 8px;
+      transform: translateX(-50%);
+      padding: 7px 9px;
+      border: 1px solid rgba(0,255,102,.28);
+      background: rgba(0,0,0,.62);
+      box-shadow: 0 0 18px rgba(0,255,102,.12);
+    }
+
+    .carousel-dot {
+      width: 24px;
+      height: 6px;
+      border: 0;
+      padding: 0;
+      cursor: pointer;
+      background: rgba(125,138,150,.52);
+      box-shadow: none;
+    }
+
+    .carousel-dot.active {
+      background: var(--green);
+      box-shadow: 0 0 12px rgba(0,255,102,.76);
+    }
+
+    .team-main-image::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(to bottom, rgba(0,0,0,.03), rgba(0,0,0,.18)),
+        repeating-linear-gradient(
+          to bottom,
+          rgba(255,255,255,.035) 0,
+          rgba(255,255,255,.035) 1px,
+          transparent 1px,
+          transparent 5px
+        );
+      mix-blend-mode: screen;
+    }
+
+    .team-main-image img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 330px;
+      object-fit: cover;
+      object-position: center;
+      filter: saturate(1.08) contrast(1.04);
+    }
+
+    .team-feature-copy {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 0;
+      padding: 18px;
+      border: 1px solid rgba(0,255,102,.18);
+      background: rgba(0,255,102,.045);
+    }
+
+    .team-feature-copy span {
+      color: var(--pink);
+      font-size: 11px;
+      font-weight: 950;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      text-shadow: 0 0 10px rgba(255,0,245,.62);
+    }
+
+    .team-feature-copy h3 {
+      margin: 12px 0 10px;
+      color: white;
+      font-size: clamp(24px, 3vw, 46px);
+      line-height: 1;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      text-shadow: 0 0 18px rgba(0,212,255,.42);
+    }
+
+    .team-feature-copy p {
+      margin: 0;
+      color: #9aa4b2;
+      font-size: 12px;
+      font-weight: 850;
+      line-height: 1.55;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .team-code {
+      display: inline-block;
+      color: #00121a;
+      background: linear-gradient(90deg, var(--cyan), var(--green));
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      box-shadow: 0 0 18px rgba(0,212,255,.36);
+    }
+
+    .team-heading h2 {
+      margin: 13px 0 8px;
+      color: white;
+      font-size: clamp(22px, 2.5vw, 38px);
+      line-height: 1.05;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+      text-shadow:
+        0 0 10px rgba(0,212,255,.55),
+        0 0 24px rgba(255,0,245,.24);
+    }
+
+    .team-heading p {
+      margin: 0;
+      color: #8c97a4;
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+    }
+
+    .team-back-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(0,255,102,.42);
+      color: var(--green);
+      background: rgba(0,255,102,.08);
+      padding: 12px 14px;
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing: .12em;
+      text-decoration: none;
+      text-transform: uppercase;
+      text-shadow: 0 0 12px rgba(0,255,102,.55);
+    }
+
+    .team-back-button:hover {
+      color: #001407;
+      background: var(--green);
+      box-shadow: 0 0 20px rgba(0,255,102,.42);
+    }
+
+    .team-signal {
+      border: 1px solid rgba(255,208,0,.38);
+      color: var(--yellow);
+      background: rgba(255,208,0,.08);
+      padding: 12px 14px;
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      text-shadow: 0 0 12px rgba(255,208,0,.55);
+      white-space: nowrap;
+    }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .crew-card {
+      position: relative;
+      min-width: 0;
+      overflow: hidden;
+      border: 1px solid rgba(0,255,102,.26);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.006)),
+        rgba(0,0,0,.58);
+      padding: 12px;
+      box-shadow:
+        inset 0 0 22px rgba(0,255,102,.05),
+        0 0 24px rgba(0,0,0,.26);
+    }
+
+    .crew-card.product-owner {
+      grid-column: 2 / span 2;
+      justify-self: center;
+      width: min(430px, 100%);
+      border-color: rgba(255,208,0,.42);
+      box-shadow:
+        inset 0 0 24px rgba(255,208,0,.06),
+        0 0 28px rgba(255,208,0,.12);
+    }
+
+    .crew-card::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--pink), var(--cyan));
+    }
+
+    .crew-card.product-owner::before {
+      background: linear-gradient(90deg, var(--yellow), var(--cyan), var(--green));
+    }
+
+    .crew-photo {
+      position: relative;
+      margin: 0;
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
+      border: 1px solid rgba(0,212,255,.34);
+      background:
+        radial-gradient(circle at 50% 36%, rgba(0,255,102,.20), transparent 30%),
+        rgba(1,7,16,.92);
+      box-shadow:
+        inset 0 0 24px rgba(0,212,255,.10),
+        0 0 18px rgba(0,212,255,.10);
+    }
+
+    .crew-photo::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(to bottom, transparent, rgba(0,0,0,.12)),
+        repeating-linear-gradient(
+          to bottom,
+          rgba(255,255,255,.035) 0,
+          rgba(255,255,255,.035) 1px,
+          transparent 1px,
+          transparent 5px
+        );
+      mix-blend-mode: screen;
+    }
+
+    .crew-photo img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: saturate(1.12) contrast(1.04);
+    }
+
+    .crew-info {
+      padding: 13px 2px 2px;
+    }
+
+    .crew-role {
+      display: block;
+      color: var(--cyan);
+      font-size: 10px;
+      font-weight: 950;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      text-shadow: 0 0 10px rgba(0,212,255,.62);
+    }
+
+    .crew-info h3 {
+      margin: 7px 0 6px;
+      color: white;
+      font-size: 17px;
+      line-height: 1.15;
+      font-weight: 950;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .crew-info p {
+      margin: 0;
+      color: #858f9c;
+      font-size: 11px;
+      font-weight: 850;
+      line-height: 1.35;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .stat {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(0,255,102,.34);
+      background: rgba(0,0,0,.58);
+      padding: 18px;
+      box-shadow:
+        inset 0 0 22px rgba(0,255,102,.06),
+        0 0 28px rgba(0,0,0,.34);
+    }
+
+    .stat::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--green), var(--cyan), var(--pink));
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 34px;
+      line-height: 1;
+      color: white;
+      text-shadow: 0 0 14px rgba(255,255,255,.25);
+    }
+
+    .stat span {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 950;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      border: 1px solid rgba(0,212,255,.28);
+      background: rgba(0,0,0,.62);
+      padding: 14px;
+      margin-bottom: 16px;
+      box-shadow: 0 0 28px rgba(0,212,255,.08);
+    }
+
+    .type-controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .type-filter {
+      border: 1px solid rgba(0,255,102,.34);
+      background: rgba(0,255,102,.05);
+      color: #9ea7b2;
+      padding: 11px 14px;
+      font: inherit;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .type-filter.active,
+    .type-filter:hover {
+      color: #001407;
+      background: var(--green);
+      box-shadow: 0 0 20px rgba(0,255,102,.45);
+    }
+
+    .search {
+      min-width: 360px;
+    }
+
+    .search input {
+      width: 100%;
+      border: 1px solid rgba(255,0,245,.34);
+      outline: none;
+      background: rgba(255,0,245,.06);
+      color: white;
+      padding: 12px 14px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      box-shadow: inset 0 0 18px rgba(255,0,245,.08);
+    }
+
+    .search input::placeholder {
+      color: #6f7680;
+    }
+
+    .legend {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin: 16px 0;
+      color: #9ea7b2;
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+    }
+
+    .legend-items {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .legend-items span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sample {
+      width: 42px;
+      height: 10px;
+      display: inline-block;
+      box-shadow: 0 0 16px currentColor;
+    }
+
+    .sample.story {
+      color: var(--cyan);
+      background: linear-gradient(90deg, var(--green), var(--cyan));
+    }
+
+    .sample.bug {
+      color: var(--pink);
+      background: linear-gradient(90deg, var(--pink), var(--orange));
+    }
+
+    .axis-head {
+      position: sticky;
+      top: 74px;
+      z-index: 60;
+      display: grid;
+      grid-template-columns: var(--left-col) 1fr var(--right-col);
+      gap: 18px;
+      align-items: end;
+      padding: 13px 16px 12px;
+      background: rgba(0, 0, 0, .82);
+      border: 1px solid rgba(0,255,102,.26);
+      box-shadow: 0 0 22px rgba(0,255,102,.12);
+      backdrop-filter: blur(12px);
+      margin-bottom: 18px;
+    }
+
+    .axis-title {
+      color: #7e8791;
+      font-size: 11px;
+      font-weight: 950;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    .axis {
+      position: relative;
+      height: 38px;
+      border-bottom: 1px solid rgba(0,255,102,.36);
+    }
+
+    .tick {
+      position: absolute;
+      bottom: -2px;
+      transform: translateX(-50%);
+      color: #9ea7b2;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 950;
+    }
+
+    .tick i {
+      display: block;
+      width: 1px;
+      height: 13px;
+      margin: 0 auto 5px;
+      background: rgba(0,255,102,.48);
+      box-shadow: 0 0 10px var(--green);
+    }
+
+    .sector {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid color-mix(in srgb, var(--sector-main) 48%, transparent);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,.006)),
+        rgba(0,0,0,.68);
+      box-shadow:
+        inset 0 0 34px color-mix(in srgb, var(--sector-main) 10%, transparent),
+        0 0 28px color-mix(in srgb, var(--sector-main) 15%, transparent);
+      margin: 24px 0;
+    }
+
+    .sector::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(90deg, color-mix(in srgb, var(--sector-main) 14%, transparent), transparent 45%),
+        repeating-linear-gradient(
+          to bottom,
+          transparent 0,
+          transparent 11px,
+          color-mix(in srgb, var(--sector-main) 8%, transparent) 11px,
+          color-mix(in srgb, var(--sector-main) 8%, transparent) 12px
+        );
+      opacity: .55;
+    }
+
+    .sector-header {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: center;
+      padding: 24px;
+      border-bottom: 1px solid color-mix(in srgb, var(--sector-main) 30%, transparent);
+    }
+
+    .sector-code {
+      display: inline-block;
+      color: #000;
+      background: linear-gradient(90deg, var(--sector-main), var(--sector-second));
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      box-shadow: 0 0 18px color-mix(in srgb, var(--sector-main) 40%, transparent);
+    }
+
+    .sector-title h2 {
+      margin: 13px 0 8px;
+      color: white;
+      font-size: clamp(20px, 2.2vw, 34px);
+      line-height: 1.05;
+      letter-spacing: -.03em;
+      text-shadow: 0 0 16px color-mix(in srgb, var(--sector-main) 40%, transparent);
+    }
+
+    .sector-title p {
+      margin: 0;
+      color: #8894a4;
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+    }
+
+    .sector-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 104px);
+      gap: 10px;
+    }
+
+    .sector-stats div {
+      border: 1px solid color-mix(in srgb, var(--sector-main) 32%, transparent);
+      background: rgba(0,0,0,.46);
+      padding: 14px;
+      box-shadow: inset 0 0 18px color-mix(in srgb, var(--sector-main) 8%, transparent);
+    }
+
+    .sector-stats strong {
+      display: block;
+      color: white;
+      font-size: 28px;
+      line-height: 1;
+      text-shadow: 0 0 12px color-mix(in srgb, var(--sector-main) 36%, transparent);
+    }
+
+    .sector-stats span {
+      display: block;
+      margin-top: 7px;
+      color: #818b98;
+      font-size: 10px;
+      font-weight: 950;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .sector-body {
+      position: relative;
+      z-index: 2;
+      padding: 10px 16px 22px;
+    }
+
+    .mission-row {
+      display: grid;
+      grid-template-columns: var(--left-col) 1fr var(--right-col);
+      gap: 18px;
+      align-items: center;
+      min-height: 84px;
+      border-bottom: 1px solid rgba(127, 255, 191, .09);
+      transition: background .18s ease, transform .18s ease;
+    }
+
+    .mission-row:last-child {
+      border-bottom: 0;
+    }
+
+    .mission-row:hover {
+      transform: translateX(5px);
+      background: rgba(0,255,102,.035);
+    }
+
+    .mission-row.is-hidden {
+      display: none;
+    }
+
+    .mission-card {
+      min-width: 0;
+      padding: 14px 0;
+    }
+
+    .mission-meta {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .mission-id {
+      color: #8b95a2;
+      font-size: 11px;
+      font-weight: 950;
+      letter-spacing: .14em;
+    }
+
+    .type-pill,
+    .phase-pill {
+      padding: 5px 8px;
+      font-size: 10px;
+      font-weight: 950;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .type-pill.story {
+      color: var(--cyan);
+      border: 1px solid rgba(0,212,255,.32);
+      background: rgba(0,212,255,.08);
+      text-shadow: 0 0 10px rgba(0,212,255,.70);
+    }
+
+    .type-pill.bug {
+      color: var(--pink);
+      border: 1px solid rgba(255,0,245,.32);
+      background: rgba(255,0,245,.08);
+      text-shadow: 0 0 10px rgba(255,0,245,.70);
+    }
+
+    .phase-pill {
+      color: #99a3af;
+      border: 1px solid rgba(153,163,175,.18);
+      background: rgba(153,163,175,.05);
+    }
+
+    .mission-card h3 {
+      margin: 0;
+      color: white;
+      font-size: 14px;
+      line-height: 1.34;
+      font-weight: 900;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .mission-card p {
+      margin: 7px 0 0;
+      color: #7f8895;
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: .04em;
+    }
+
+    .space-track {
+      position: relative;
+      height: 44px;
+      border: 1px solid rgba(0,255,102,.16);
+      background:
+        repeating-linear-gradient(
+          90deg,
+          rgba(0,255,102,.035) 0,
+          rgba(0,255,102,.035) calc((100% / 42) - 1px),
+          rgba(0,255,102,.16) calc((100% / 42) - 1px),
+          rgba(0,255,102,.16) calc(100% / 42)
+        ),
+        rgba(0,0,0,.38);
+      overflow: hidden;
+      box-shadow:
+        inset 0 0 18px rgba(0,0,0,.45),
+        0 0 12px rgba(0,255,102,.06);
+    }
+
+    .space-track::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle, rgba(255,255,255,.36) 1px, transparent 1.8px);
+      background-size: 27px 13px;
+      opacity: .10;
+    }
+
+    .bar {
+      position: absolute;
+      top: 8px;
+      height: 28px;
+      min-width: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      color: #000;
+      font-size: 10px;
+      font-weight: 950;
+      letter-spacing: .08em;
+      clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 50%, calc(100% - 9px) 100%, 0 100%, 7px 50%);
+    }
+
+    .bar::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          rgba(255,255,255,.28) 0,
+          rgba(255,255,255,.28) 1px,
+          transparent 1px,
+          transparent 4px
+        );
+      opacity: .55;
+    }
+
+    .bar::after {
+      content: "";
+      position: absolute;
+      width: 24px;
+      top: 0;
+      bottom: 0;
+      left: -40px;
+      transform: skewX(-20deg);
+      background: rgba(255,255,255,.50);
+      animation: barLight 3.8s infinite;
+    }
+
+    .bar.story {
+      background: linear-gradient(90deg, var(--green), var(--cyan));
+      box-shadow: 0 0 18px rgba(0,212,255,.45);
+    }
+
+    .bar.bug {
+      background: linear-gradient(90deg, var(--pink), var(--orange));
+      box-shadow: 0 0 18px rgba(255,0,245,.42);
+    }
+
+    .bar span {
+      position: relative;
+      z-index: 2;
+    }
+
+    @keyframes barLight {
+      0%, 64% { left: -42px; opacity: 0; }
+      72% { opacity: .8; }
+      100% { left: calc(100% + 42px); opacity: 0; }
+    }
+
+    .mission-score {
+      text-align: right;
+      color: white;
+    }
+
+    .mission-score strong {
+      display: block;
+      font-size: 24px;
+      line-height: 1;
+      color: var(--green);
+      text-shadow: 0 0 12px var(--green);
+    }
+
+    .mission-score span {
+      display: block;
+      margin-top: 5px;
+      color: #7f8895;
+      font-size: 10px;
+      font-weight: 950;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .empty {
+      display: none;
+      margin-top: 22px;
+      padding: 24px;
+      text-align: center;
+      border: 1px solid rgba(255,0,245,.32);
+      color: var(--pink);
+      background: rgba(255,0,245,.06);
+      font-weight: 950;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      box-shadow: 0 0 22px rgba(255,0,245,.10);
+    }
+
+    .empty.show {
+      display: block;
+    }
+
+    .footer {
+      text-align: center;
+      color: #6e7782;
+      margin-top: 26px;
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 1240px) {
+      :root {
+        --left-col: 360px;
+        --right-col: 72px;
+      }
+
+      .hero-content,
+      .team-heading,
+      .team-feature,
+      .sector-header,
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      .hud {
+        display: none;
+      }
+
+      .scoreboard,
+      .dashboard,
+      .team-grid,
+      .sector-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .search {
+        min-width: 100%;
+      }
+    }
+
+    @media (max-width: 860px) {
+      .arcade-shell {
+        width: min(100% - 20px, 1660px);
+        padding-top: 12px;
+      }
+
+      .topbar {
+        position: relative;
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .nav {
+        justify-content: flex-start;
+      }
+
+      .hero {
+        min-height: 360px;
+      }
+
+      .dashboard {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .team-inner {
+        padding: 18px;
+      }
+
+      .team-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .crew-card.product-owner {
+        grid-column: 1;
+      }
+
+      .team-signal {
+        white-space: normal;
+      }
+
+      .team-actions {
+        justify-content: flex-start;
+      }
+
+      .axis-head {
+        display: none;
+      }
+
+      .mission-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 14px 0 18px;
+      }
+
+      .mission-score {
+        text-align: left;
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+      }
+
+      .mission-score strong,
+      .mission-score span {
+        display: inline;
+      }
+
+      .space-track {
+        height: 48px;
+      }
+
+      .bar {
+        top: 9px;
+        height: 30px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stars" id="stars"></div>
+  <div class="shooting-stars">
+    <div class="meteor"></div>
+    <div class="meteor"></div>
+    <div class="meteor"></div>
+  </div>
+
+  <main class="arcade-shell" id="timeline">
+    <nav class="topbar">
+      <div class="logo">NEXUS <span>ORBIT</span></div>
+
+      <div class="nav" id="sprintFilters">
+        <button class="nav-filter active" data-sprint="all">ALL</button><button class="nav-filter" data-sprint="Sprint 1">SPRINT 1</button><button class="nav-filter" data-sprint="Sprint 2">SPRINT 2</button><button class="nav-filter" data-sprint="Sprint 3">SPRINT 3</button>
+      </div>
+
+      <a class="team-nav-button" href="#equipo">Ver equipo</a>
+
+      <div class="hud">
+        <div class="hud-box">⌛ 42 DAYS</div>
+        <div class="hud-box">LV. 3</div>
+        <div class="hud-box pink">SAMY</div>
+      </div>
+    </nav>
+
+    <section class="hero">
+      <div class="alien a1">👾</div>
+      <div class="alien a2">👾</div>
+      <div class="alien a3">👾</div>
+      <div class="alien a4">🚀</div>
+
+      <div class="hero-inner">
+        <p class="welcome">✦ Bienvenido a ✦</p>
+        <h1>NEXUS <span>ORBIT</span></h1>
+        <p class="hero-subtitle">Timeline retro espacial de tareas · Plataforma de videojuegos multijugador</p>
+        <button class="start-button">▶ Insertar sprint</button>
+        <div class="pilot-line">PILOT: SAMY · SCORE: 7320 · BUGS: 21</div>
+      </div>
+    </section>
+
+    <section class="dashboard">
+      <article class="stat">
+        <strong>61</strong>
+        <span>Total tareas</span>
+      </article>
+      <article class="stat">
+        <strong>40</strong>
+        <span>Stories</span>
+      </article>
+      <article class="stat">
+        <strong>21</strong>
+        <span>Bugs</span>
+      </article>
+      <article class="stat">
+        <strong>3</strong>
+        <span>Sprints</span>
+      </article>
+    </section>
+
+    <section class="team-section" id="equipo" aria-labelledby="teamTitle">
+      <div class="team-inner">
+        <header class="team-heading">
+          <div>
+            <span class="team-code">CREW DATABASE</span>
+            <h2 id="teamTitle">Conoce a tu equipo</h2>
+            <p>Tripulaci&oacute;n Nexus Orbit lista para la siguiente misi&oacute;n</p>
+          </div>
+          <div class="team-actions">
+            <a class="team-back-button" href="#timeline">Volver al timeline</a>
+            <div class="team-signal">9 pilotos online</div>
+          </div>
+        </header>
+
+        <article class="team-feature">
+          <figure class="team-main-image">
+            <div class="team-carousel" aria-label="Carrusel de imagenes del equipo">
+              <div class="carousel-slide active">
+                <img src="110e4d35-4520-462e-a878-8a26ec7e90f4.png" alt="Imagen principal del equipo Nexus Orbit" />
+              </div>
+              <div class="carousel-slide">
+                <img src="7c526b5c-f52d-4e64-8658-de37723de8ad.png" alt="Equipo Nexus Orbit en mision completa" />
+              </div>
+              <div class="carousel-slide">
+                <img src="170a8c53-bf36-42d0-9c28-1c2bb5bfef77.png" alt="Equipo Nexus Orbit resolviendo bugs" />
+              </div>
+              <div class="carousel-slide">
+                <img src="5565e6e2-80e1-4153-8a3b-19e00d1b7a7d.png" alt="Equipo Nexus Orbit en playtest" />
+              </div>
+              <div class="carousel-slide">
+                <img src="af72e2a3-2eca-4d7f-8ec3-6ec236fbc0d9.png" alt="Equipo Nexus Orbit planificando roadmap" />
+              </div>
+              <div class="carousel-slide">
+                <img src="9437e107-dcb8-45f6-8879-48eaaa227e1b.png" alt="Equipo Nexus Orbit celebrando launch success" />
+              </div>
+              <button class="carousel-control prev" type="button" data-carousel="prev" aria-label="Imagen anterior">ANT</button>
+              <button class="carousel-control next" type="button" data-carousel="next" aria-label="Imagen siguiente">SIG</button>
+              <div class="carousel-dots" aria-label="Selector de imagenes del carrusel">
+                <button class="carousel-dot active" type="button" data-slide="0" aria-label="Ver imagen 1"></button>
+                <button class="carousel-dot" type="button" data-slide="1" aria-label="Ver imagen 2"></button>
+                <button class="carousel-dot" type="button" data-slide="2" aria-label="Ver imagen 3"></button>
+                <button class="carousel-dot" type="button" data-slide="3" aria-label="Ver imagen 4"></button>
+                <button class="carousel-dot" type="button" data-slide="4" aria-label="Ver imagen 5"></button>
+                <button class="carousel-dot" type="button" data-slide="5" aria-label="Ver imagen 6"></button>
+              </div>
+            </div>
+          </figure>
+          <div class="team-feature-copy">
+            <span>MAIN CREW CAROUSEL</span>
+            <h3>Equipo Nexus Orbit</h3>
+            <p>Carrusel principal de la tripulaci&oacute;n. Las tarjetas inferiores muestran a cada piloto dentro de la base retro espacial.</p>
+          </div>
+        </article>
+
+        <div class="team-grid">
+          <article class="crew-card">
+            <figure class="crew-photo">
+              <img src="Captura%20de%20pantalla%202026-05-08%20183508.png" alt="Foto de Miembro 01" />
+            </figure>
+            <div class="crew-info">
+              <span class="crew-role">CODE PILOT</span>
+              <h3>Miembro 01</h3>
+              <p>Programaci&oacute;n principal</p>
+            </div>
+          </article>
+
+          <article class="crew-card">
+            <figure class="crew-photo">
+              <img src="Captura%20de%20pantalla%202026-05-08%20183447.png" alt="Foto de Miembro 02" />
+            </figure>
+            <div class="crew-info">
+              <span class="crew-role">SYS ARCH</span>
+              <h3>Miembro 02</h3>
+              <p>Arquitectura de sistemas</p>
+            </div>
+          </article>
+
+          <article class="crew-card">
+            <figure class="crew-photo">
+              <img src="31430826-b5d6-45bf-9cc5-d222a5adc43e.png" alt="Foto de Miembro 03" />
+            </figure>
+            <div class="crew-info">
+              <span class="crew-role">TECH LEAD</span>
+              <h3>Miembro 03</h3>
+              <p>Direcci&oacute;n t&eacute;cnica</p>
+            </div>
+          </article>
+
+          <article class="crew-card">
+            <figure class="crew-photo">
+              <img src="c5f5b4d4-a1bd-4e27-9d25-8b99ccaca171.png" alt="Foto de Miembro 04" />
+            </figure>
+            <div class="crew-info">
+              <span class="crew-role">GAME DEV</span>
+              <h3>Miembro 04</h3>
+              <p>Gameplay y prototipos</p>
+            </div>
+          </article>
+
+          <article class="crew-card">
+            <figure class="crew-photo">
+              <img src="b350951c-12db-48fc-9e1c-cdb85735e35a.png" alt="Foto de Miembro 05" />
+            </figure>
+            <div class="crew-info">
+              <span class="crew-role">GAME DESIGN</span>
+              <h3>Miembro 05</h3>
+              <p>Dise&ntilde;o de juego</p>
+            </div>
+          </article>
+
+          <article class="crew-card">
+            <figure class="crew-photo">
+              <img src="acc583b0-b020-4de6-85be-5f287a687d8e.png" alt="Foto de Miembro 06" />
+            </figure>
+            <div class="crew-info">
+              <span class="crew-role">UI/UX DESIGN</span>
+              <h3>Miembro 06</h3>
+              <p>Interfaz y experiencia</p>
+            </div>
+          </article>
+
+          <article class="crew-card">
+            <figure class="crew-photo">
+              <img src="d009726c-ecf0-4d4e-8737-824a522d3faa.png" alt="Foto de Miembro 07" />
+            </figure>
+            <div class="crew-info">
+              <span class="crew-role">MISSION LEAD</span>
+              <h3>Miembro 07</h3>
+              <p>Coordinaci&oacute;n orbital</p>
+            </div>
+          </article>
+
+          <article class="crew-card">
+            <figure class="crew-photo">
+              <img src="806a1dfd-5ca5-4afd-b332-a83779d85247.png" alt="Foto de Miembro 08" />
+            </figure>
+            <div class="crew-info">
+              <span class="crew-role">PILOT CREW</span>
+              <h3>Miembro 08</h3>
+              <p>Apoyo de misi&oacute;n</p>
+            </div>
+          </article>
+
+          <article class="crew-card product-owner">
+            <figure class="crew-photo">
+              <img src="0167ad38-e053-44c7-8c6e-5c41f1541d47.png" alt="Foto del Product Owner" />
+            </figure>
+            <div class="crew-info">
+              <span class="crew-role">PRODUCT OWNER</span>
+              <h3>Product Owner</h3>
+              <p>Visi&oacute;n de producto</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="controls">
+      <div class="type-controls" id="typeFilters">
+        <button class="type-filter active" data-type="all">ALL TYPES</button>
+        <button class="type-filter" data-type="story">STORIES</button>
+        <button class="type-filter" data-type="bug">BUGS</button>
+      </div>
+
+      <label class="search">
+        <input id="searchInput" type="search" placeholder="BUSCAR MISIÓN, ID, FASE..." />
+      </label>
+    </section>
+
+    <section class="legend">
+      <div class="legend-items">
+        <span><i class="sample story"></i> Story mission</span>
+        <span><i class="sample bug"></i> Bug alert</span>
+        <span>Longitud = duración real</span>
+      </div>
+      <div id="visibleCounter">61 misiones visibles</div>
+    </section>
+
+    <div class="axis-head">
+      <div class="axis-title">Mission log</div>
+      <div class="axis">
+        
+      <span class="tick" style="left:0.0000%">
+        <i></i>
+        <b>16/03</b>
+      </span>
+    
+      <span class="tick" style="left:16.6667%">
+        <i></i>
+        <b>23/03</b>
+      </span>
+    
+      <span class="tick" style="left:33.3333%">
+        <i></i>
+        <b>30/03</b>
+      </span>
+    
+      <span class="tick" style="left:50.0000%">
+        <i></i>
+        <b>06/04</b>
+      </span>
+    
+      <span class="tick" style="left:66.6667%">
+        <i></i>
+        <b>13/04</b>
+      </span>
+    
+      <span class="tick" style="left:83.3333%">
+        <i></i>
+        <b>20/04</b>
+      </span>
+    
+      <span class="tick" style="left:97.6190%">
+        <i></i>
+        <b>26/04</b>
+      </span>
+    
+      </div>
+      <div class="axis-title" style="text-align:right;">Time</div>
+    </div>
+
+    
+    <section class="sector"
+             data-section-sprint="Sprint 1"
+             style="--sector-main:#00ff66; --sector-second:#00d4ff;">
+      <header class="sector-header">
+        <div class="sector-title">
+          <span class="sector-code">SECTOR ALPHA</span>
+          <h2>Sprint 1 · Cimientos</h2>
+          <p>MISSION WINDOW: 16/03/2026 - 29/03/2026</p>
+        </div>
+
+        <div class="sector-stats">
+          <div><strong>20</strong><span>TASKS</span></div>
+          <div><strong>14</strong><span>STORY</span></div>
+          <div><strong>6</strong><span>BUGS</span></div>
+        </div>
+      </header>
+
+      <div class="sector-body">
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 1"
+                 data-type="story"
+                 data-search="scrum-1 sprint 1 story setup arquitectura del proyecto y ci/cd inicio done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-1</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Inicio</span>
+            </div>
+            <h3>Setup arquitectura del proyecto y CI/CD</h3>
+            <p>16/03 → 18/03 · 3 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:0.0000%; width:7.1429%">
+              <span>3D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>3</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 1"
+                 data-type="story"
+                 data-search="scrum-2 sprint 1 story sistema de autenticación (login/registro firebase) inicio done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-2</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Inicio</span>
+            </div>
+            <h3>Sistema de autenticación (Login/Registro Firebase)</h3>
+            <p>16/03 → 19/03 · 4 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:0.0000%; width:9.5238%">
+              <span>4D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>4</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 1"
+                 data-type="story"
+                 data-search="scrum-3 sprint 1 story interfaz principal y sistema de navegación desarrollo done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-3</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Desarrollo</span>
+            </div>
+            <h3>Interfaz principal y sistema de navegación</h3>
+            <p>17/03 → 21/03 · 5 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:2.3810%; width:11.9048%">
+              <span>5D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>5</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 1"
+                 data-type="story"
+                 data-search="scrum-4 sprint 1 story desarrollar juego space runner desarrollo done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-4</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Desarrollo</span>
+            </div>
+            <h3>Desarrollar juego Space Runner</h3>
+            <p>18/03 → 23/03 · 6 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:4.7619%; width:14.2857%">
+              <span>6D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>6</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 1"
+                 data-type="story"
+                 data-search="scrum-5 sprint 1 story desarrollar juego space stack desarrollo done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-5</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Desarrollo</span>
+            </div>
+            <h3>Desarrollar juego Space Stack</h3>
+            <p>18/03 → 23/03 · 6 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:4.7619%; width:14.2857%">
+              <span>6D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>6</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 1"
+                 data-type="story"
+                 data-search="scrum-6 sprint 1 story desarrollar juego typing fighter desarrollo done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-6</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Desarrollo</span>
+            </div>
+            <h3>Desarrollar juego Typing Fighter</h3>
+            <p>19/03 → 24/03 · 6 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:7.1429%; width:14.2857%">
+              <span>6D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>6</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 1"
+                 data-type="story"
+                 data-search="scrum-7 sprint 1 story desarrollo prototipo aplicación desarrolladores testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-7</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Desarrollo prototipo aplicación desarrolladores</h3>
+            <p>19/03 → 25/03 · 7 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:7.1429%; width:16.6667%">
+              <span>7D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>7</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 1"
+                 data-type="story"
+                 data-search="scrum-8 sprint 1 story desarrollar juego space breaker testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-8</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Desarrollar juego Space Breaker</h3>
+            <p>20/03 → 25/03 · 6 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:9.5238%; width:14.2857%">
+              <span>6D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>6</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 1"
+                 data-type="story"
+                 data-search="scrum-9 sprint 1 story sistema de chat entre amigos (firebase) testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-9</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Sistema de chat entre amigos (Firebase)</h3>
+            <p>20/03 → 25/03 · 6 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:9.5238%; width:14.2857%">
+              <span>6D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>6</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 1"
+                 data-type="story"
+                 data-search="scrum-10 sprint 1 story sección de estadísticas (stats) testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-10</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Sección de estadísticas (Stats)</h3>
+            <p>21/03 → 26/03 · 6 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:11.9048%; width:14.2857%">
+              <span>6D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>6</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 1"
+                 data-type="story"
+                 data-search="scrum-14 sprint 1 story rediseño carrusel novedades (3 por slide) testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-14</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Rediseño carrusel Novedades (3 por slide)</h3>
+            <p>22/03 → 25/03 · 4 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:14.2857%; width:9.5238%">
+              <span>4D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>4</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 1"
+                 data-type="story"
+                 data-search="scrum-32 sprint 1 story sección catálogo testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-32</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Sección Catálogo</h3>
+            <p>23/03 → 26/03 · 4 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:16.6667%; width:9.5238%">
+              <span>4D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>4</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 1"
+                 data-type="story"
+                 data-search="scrum-33 sprint 1 story sección de amigos testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-33</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Sección de Amigos</h3>
+            <p>23/03 → 27/03 · 5 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:16.6667%; width:11.9048%">
+              <span>5D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>5</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 1"
+                 data-type="story"
+                 data-search="scrum-23 sprint 1 story notificaciones visuales de logro desbloqueado testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-23</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Notificaciones visuales de logro desbloqueado</h3>
+            <p>24/03 → 27/03 · 4 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:19.0476%; width:9.5238%">
+              <span>4D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>4</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 1"
+                 data-type="bug"
+                 data-search="bug-37 sprint 1 bug errata &quot;tadla&quot; en tabla de pilotos testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">BUG-37</span>
+              <span class="type-pill bug">Bug</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Errata &quot;TADLA&quot; en tabla de pilotos</h3>
+            <p>25/03 → 25/03 · 1 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar bug" style="left:21.4286%; width:2.3810%">
+              <span>1D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>1</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 1"
+                 data-type="bug"
+                 data-search="bug-38 sprint 1 bug overflow de texto en sección stats testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">BUG-38</span>
+              <span class="type-pill bug">Bug</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Overflow de texto en sección Stats</h3>
+            <p>26/03 → 27/03 · 2 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar bug" style="left:23.8095%; width:4.7619%">
+              <span>2D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>2</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 1"
+                 data-type="bug"
+                 data-search="bug-39 sprint 1 bug notificación fantasma (numerito 1) en chat testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">BUG-39</span>
+              <span class="type-pill bug">Bug</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Notificación fantasma (numerito 1) en chat</h3>
+            <p>27/03 → 28/03 · 2 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar bug" style="left:26.1905%; width:4.7619%">
+              <span>2D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>2</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 1"
+                 data-type="bug"
+                 data-search="bug-40 sprint 1 bug errores firebase en sistema de chat testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">BUG-40</span>
+              <span class="type-pill bug">Bug</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Errores Firebase en sistema de chat</h3>
+            <p>27/03 → 29/03 · 3 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar bug" style="left:26.1905%; width:7.1429%">
+              <span>3D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>3</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 1"
+                 data-type="bug"
+                 data-search="bug-41 sprint 1 bug no se pueden añadir amigos por código testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">BUG-41</span>
+              <span class="type-pill bug">Bug</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>No se pueden añadir amigos por código</h3>
+            <p>28/03 → 29/03 · 2 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar bug" style="left:28.5714%; width:4.7619%">
+              <span>2D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>2</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 1"
+                 data-type="bug"
+                 data-search="bug-42 sprint 1 bug icono comandante visible tras eliminación testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">BUG-42</span>
+              <span class="type-pill bug">Bug</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Icono comandante visible tras eliminación</h3>
+            <p>28/03 → 29/03 · 2 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar bug" style="left:28.5714%; width:4.7619%">
+              <span>2D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>2</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+      </div>
+    </section>
+    
+    <section class="sector"
+             data-section-sprint="Sprint 2"
+             style="--sector-main:#ff00f5; --sector-second:#00ff66;">
+      <header class="sector-header">
+        <div class="sector-title">
+          <span class="sector-code">SECTOR NEBULA</span>
+          <h2>Sprint 2 · Pulido y planificación de sistemas avanzados</h2>
+          <p>MISSION WINDOW: 30/03/2026 - 12/04/2026</p>
+        </div>
+
+        <div class="sector-stats">
+          <div><strong>27</strong><span>TASKS</span></div>
+          <div><strong>16</strong><span>STORY</span></div>
+          <div><strong>11</strong><span>BUGS</span></div>
+        </div>
+      </header>
+
+      <div class="sector-body">
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 2"
+                 data-type="story"
+                 data-search="scrum-15 sprint 2 story fix overlays de resultado en pantalla completa inicio done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-15</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Inicio</span>
+            </div>
+            <h3>Fix overlays de resultado en pantalla completa</h3>
+            <p>30/03 → 01/04 · 3 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:33.3333%; width:7.1429%">
+              <span>3D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>3</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 2"
+                 data-type="story"
+                 data-search="scrum-25 sprint 2 story revisar y completar logros pendientes inicio done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-25</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Inicio</span>
+            </div>
+            <h3>Revisar y completar logros pendientes</h3>
+            <p>30/03 → 02/04 · 4 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:33.3333%; width:9.5238%">
+              <span>4D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>4</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 2"
+                 data-type="story"
+                 data-search="scrum-16 sprint 2 story mejoras space breaker (velocidad + multibola) inicio done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-16</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Inicio</span>
+            </div>
+            <h3>Mejoras Space Breaker (velocidad + multibola)</h3>
+            <p>31/03 → 03/04 · 4 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:35.7143%; width:9.5238%">
+              <span>4D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>4</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 2"
+                 data-type="story"
+                 data-search="scrum-24 sprint 2 story mejorar responsividad móvil en todos los juegos desarrollo done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-24</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Desarrollo</span>
+            </div>
+            <h3>Mejorar responsividad móvil en todos los juegos</h3>
+            <p>31/03 → 04/04 · 5 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:35.7143%; width:11.9048%">
+              <span>5D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>5</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 2"
+                 data-type="story"
+                 data-search="scrum-18 sprint 2 story añadir música y efectos de sonido desarrollo done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-18</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Desarrollo</span>
+            </div>
+            <h3>Añadir música y efectos de sonido</h3>
+            <p>01/04 → 04/04 · 4 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:38.0952%; width:9.5238%">
+              <span>4D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>4</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 2"
+                 data-type="story"
+                 data-search="scrum-17 sprint 2 story pantalla de perfil con historial y estadísticas desarrollo done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-17</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Desarrollo</span>
+            </div>
+            <h3>Pantalla de perfil con historial y estadísticas</h3>
+            <p>01/04 → 05/04 · 5 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:38.0952%; width:11.9048%">
+              <span>5D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>5</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 2"
+                 data-type="story"
+                 data-search="scrum-30 sprint 2 story planificar sistema matchmaking desarrollo done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-30</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Desarrollo</span>
+            </div>
+            <h3>Planificar sistema matchmaking</h3>
+            <p>01/04 → 05/04 · 5 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:38.0952%; width:11.9048%">
+              <span>5D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>5</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 2"
+                 data-type="story"
+                 data-search="scrum-22 sprint 2 story personalización de perfil (avatar y color) desarrollo done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-22</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Desarrollo</span>
+            </div>
+            <h3>Personalización de perfil (avatar y color)</h3>
+            <p>02/04 → 05/04 · 4 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:40.4762%; width:9.5238%">
+              <span>4D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>4</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 2"
+                 data-type="story"
+                 data-search="scrum-20 sprint 2 story sistema de xp y niveles de usuario desarrollo done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-20</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Desarrollo</span>
+            </div>
+            <h3>Sistema de XP y niveles de usuario</h3>
+            <p>02/04 → 06/04 · 5 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:40.4762%; width:11.9048%">
+              <span>5D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>5</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 2"
+                 data-type="story"
+                 data-search="scrum-28 sprint 2 story planificar sistema elo individual por juego desarrollo done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-28</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Desarrollo</span>
+            </div>
+            <h3>Planificar sistema ELO individual por juego</h3>
+            <p>02/04 → 06/04 · 5 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:40.4762%; width:11.9048%">
+              <span>5D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>5</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 2"
+                 data-type="story"
+                 data-search="scrum-21 sprint 2 story retos diarios (daily challenges) desarrollo done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-21</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Desarrollo</span>
+            </div>
+            <h3>Retos diarios (daily challenges)</h3>
+            <p>03/04 → 06/04 · 4 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:42.8571%; width:9.5238%">
+              <span>4D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>4</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 2"
+                 data-type="story"
+                 data-search="scrum-29 sprint 2 story planificar sistema de baneos desarrollo done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-29</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Desarrollo</span>
+            </div>
+            <h3>Planificar sistema de baneos</h3>
+            <p>03/04 → 06/04 · 4 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:42.8571%; width:9.5238%">
+              <span>4D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>4</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 2"
+                 data-type="story"
+                 data-search="scrum-19 sprint 2 story tabla de clasificación global por juego (ranking) desarrollo done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-19</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Desarrollo</span>
+            </div>
+            <h3>Tabla de clasificación global por juego (ranking)</h3>
+            <p>03/04 → 07/04 · 5 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:42.8571%; width:11.9048%">
+              <span>5D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>5</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 2"
+                 data-type="story"
+                 data-search="scrum-26 sprint 2 story desarrollar juego multijugador 4 o más personas testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-26</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Desarrollar juego Multijugador 4 o más personas</h3>
+            <p>04/04 → 08/04 · 5 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:45.2381%; width:11.9048%">
+              <span>5D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>5</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 2"
+                 data-type="story"
+                 data-search="scrum-36 sprint 2 story crear juego online de 4 jugadores o más testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-36</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Crear juego online de 4 jugadores o más</h3>
+            <p>05/04 → 09/04 · 5 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:47.6190%; width:11.9048%">
+              <span>5D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>5</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 2"
+                 data-type="bug"
+                 data-search="bug-43 sprint 2 bug logros no visibles en pantalla completa testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">BUG-43</span>
+              <span class="type-pill bug">Bug</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Logros no visibles en pantalla completa</h3>
+            <p>07/04 → 08/04 · 2 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar bug" style="left:52.3810%; width:4.7619%">
+              <span>2D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>2</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 2"
+                 data-type="bug"
+                 data-search="bug-44 sprint 2 bug space stack se descentra al alternar pantalla completa testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">BUG-44</span>
+              <span class="type-pill bug">Bug</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Space Stack se descentra al alternar pantalla completa</h3>
+            <p>07/04 → 08/04 · 2 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar bug" style="left:52.3810%; width:4.7619%">
+              <span>2D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>2</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 2"
+                 data-type="bug"
+                 data-search="bug-45 sprint 2 bug ranking mal espaciado en móvil con nombres largos testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">BUG-45</span>
+              <span class="type-pill bug">Bug</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Ranking mal espaciado en móvil con nombres largos</h3>
+            <p>07/04 → 08/04 · 2 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar bug" style="left:52.3810%; width:4.7619%">
+              <span>2D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>2</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 2"
+                 data-type="bug"
+                 data-search="bug-46 sprint 2 bug multijugador online no funcional testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">BUG-46</span>
+              <span class="type-pill bug">Bug</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Multijugador online no funcional</h3>
+            <p>08/04 → 09/04 · 2 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar bug" style="left:54.7619%; width:4.7619%">
+              <span>2D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>2</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 2"
+                 data-type="bug"
+                 data-search="bug-47 sprint 2 bug space stack crashea al cambiar resolución / input espacio testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">BUG-47</span>
+              <span class="type-pill bug">Bug</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Space Stack crashea al cambiar resolución / input espacio</h3>
+            <p>08/04 → 09/04 · 2 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar bug" style="left:54.7619%; width:4.7619%">
+              <span>2D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>2</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 2"
+                 data-type="bug"
+                 data-search="bug-48 sprint 2 bug ranking no diferencia dificultad de nivel testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">BUG-48</span>
+              <span class="type-pill bug">Bug</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Ranking no diferencia dificultad de nivel</h3>
+            <p>08/04 → 10/04 · 3 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar bug" style="left:54.7619%; width:7.1429%">
+              <span>3D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>3</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 2"
+                 data-type="bug"
+                 data-search="bug-49 sprint 2 bug pantalla completa móvil fuerza horizontal incompatible testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">BUG-49</span>
+              <span class="type-pill bug">Bug</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Pantalla completa móvil fuerza horizontal incompatible</h3>
+            <p>09/04 → 10/04 · 2 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar bug" style="left:57.1429%; width:4.7619%">
+              <span>2D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>2</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 2"
+                 data-type="bug"
+                 data-search="bug-50 sprint 2 bug chat sin separador de fecha entre mensajes testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">BUG-50</span>
+              <span class="type-pill bug">Bug</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Chat sin separador de fecha entre mensajes</h3>
+            <p>09/04 → 10/04 · 2 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar bug" style="left:57.1429%; width:4.7619%">
+              <span>2D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>2</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 2"
+                 data-type="bug"
+                 data-search="bug-51 sprint 2 bug space runner sin soporte input táctil en móvil testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">BUG-51</span>
+              <span class="type-pill bug">Bug</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Space Runner sin soporte input táctil en móvil</h3>
+            <p>09/04 → 10/04 · 2 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar bug" style="left:57.1429%; width:4.7619%">
+              <span>2D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>2</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 2"
+                 data-type="bug"
+                 data-search="bug-52 sprint 2 bug logro diario no se actualiza diariamente testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">BUG-52</span>
+              <span class="type-pill bug">Bug</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Logro diario no se actualiza diariamente</h3>
+            <p>10/04 → 11/04 · 2 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar bug" style="left:59.5238%; width:4.7619%">
+              <span>2D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>2</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 2"
+                 data-type="bug"
+                 data-search="bug-53 sprint 2 bug space runner genera patrones imposibles testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">BUG-53</span>
+              <span class="type-pill bug">Bug</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Space Runner genera patrones imposibles</h3>
+            <p>10/04 → 11/04 · 2 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar bug" style="left:59.5238%; width:4.7619%">
+              <span>2D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>2</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 2"
+                 data-type="story"
+                 data-search="scrum-35 sprint 2 story despliegue en github y vercel testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-35</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Despliegue en GitHub y Vercel</h3>
+            <p>11/04 → 12/04 · 2 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:61.9048%; width:4.7619%">
+              <span>2D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>2</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+      </div>
+    </section>
+    
+    <section class="sector"
+             data-section-sprint="Sprint 3"
+             style="--sector-main:#ffd000; --sector-second:#ff00f5;">
+      <header class="sector-header">
+        <div class="sector-title">
+          <span class="sector-code">SECTOR ORBIT</span>
+          <h2>Sprint 3 · Implementación profunda ELO + Conquista Espacial</h2>
+          <p>MISSION WINDOW: 13/04/2026 - 26/04/2026</p>
+        </div>
+
+        <div class="sector-stats">
+          <div><strong>14</strong><span>TASKS</span></div>
+          <div><strong>10</strong><span>STORY</span></div>
+          <div><strong>4</strong><span>BUGS</span></div>
+        </div>
+      </header>
+
+      <div class="sector-body">
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 3"
+                 data-type="story"
+                 data-search="scrum-43 sprint 3 story database rules + suite tests automatizados (102 tests, 100% pass) inicio done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-43</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Inicio</span>
+            </div>
+            <h3>Database rules + suite tests automatizados (102 tests, 100% pass)</h3>
+            <p>13/04 → 16/04 · 4 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:66.6667%; width:9.5238%">
+              <span>4D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>4</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 3"
+                 data-type="story"
+                 data-search="scrum-13 sprint 3 story sistema rangos elo estilo lol (6 tiers + progreso visual) inicio done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-13</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Inicio</span>
+            </div>
+            <h3>Sistema rangos ELO estilo LoL (6 tiers + progreso visual)</h3>
+            <p>13/04 → 17/04 · 5 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:66.6667%; width:11.9048%">
+              <span>5D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>5</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 3"
+                 data-type="story"
+                 data-search="scrum-31 sprint 3 story sistema unificado de modos local / ranked / invite desarrollo done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-31</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Desarrollo</span>
+            </div>
+            <h3>Sistema unificado de modos LOCAL / RANKED / INVITE</h3>
+            <p>14/04 → 18/04 · 5 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:69.0476%; width:11.9048%">
+              <span>5D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>5</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 3"
+                 data-type="story"
+                 data-search="scrum-12 sprint 3 story juego conquista espacial (single-player + online 1v1) testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-12</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Juego Conquista Espacial (single-player + online 1v1)</h3>
+            <p>14/04 → 22/04 · 9 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:69.0476%; width:21.4286%">
+              <span>9D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>9</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 3"
+                 data-type="story"
+                 data-search="scrum-42 sprint 3 story logros racha en cosmic warfare inicio done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-42</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Inicio</span>
+            </div>
+            <h3>Logros RACHA en Cosmic Warfare</h3>
+            <p>15/04 → 17/04 · 3 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:71.4286%; width:7.1429%">
+              <span>3D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>3</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 3"
+                 data-type="story"
+                 data-search="scrum-40 sprint 3 story notificaciones turno globales navbar + tiempo turno configurable desarrollo done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-40</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Desarrollo</span>
+            </div>
+            <h3>Notificaciones turno globales NavBar + tiempo turno configurable</h3>
+            <p>15/04 → 18/04 · 4 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:71.4286%; width:9.5238%">
+              <span>4D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>4</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 3"
+                 data-type="story"
+                 data-search="scrum-39 sprint 3 story elo por juego en leaderboard y perfil desarrollo done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-39</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Desarrollo</span>
+            </div>
+            <h3>ELO por juego en leaderboard y perfil</h3>
+            <p>16/04 → 19/04 · 4 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:73.8095%; width:9.5238%">
+              <span>4D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>4</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 3"
+                 data-type="story"
+                 data-search="scrum-38 sprint 3 story pulido ux elo (cambio post-partida, abandon, lobby externo, invitar amigos) desarrollo done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-38</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Desarrollo</span>
+            </div>
+            <h3>Pulido UX ELO (cambio post-partida, abandon, lobby externo, invitar amigos)</h3>
+            <p>18/04 → 21/04 · 4 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:78.5714%; width:9.5238%">
+              <span>4D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>4</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 3"
+                 data-type="bug"
+                 data-search="bug-54 sprint 3 bug cosmic warfare: tdz crash + play aleatorio desarrollo done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">BUG-54</span>
+              <span class="type-pill bug">Bug</span>
+              <span class="phase-pill">Desarrollo</span>
+            </div>
+            <h3>Cosmic Warfare: TDZ crash + PLAY aleatorio</h3>
+            <p>21/04 → 21/04 · 1 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar bug" style="left:85.7143%; width:2.3810%">
+              <span>1D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>1</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 3"
+                 data-type="story"
+                 data-search="scrum-34 sprint 3 story chat en partida + combat log + página guía elo testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-34</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Chat en partida + combat log + página guía ELO</h3>
+            <p>21/04 → 23/04 · 3 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:85.7143%; width:7.1429%">
+              <span>3D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>3</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 3"
+                 data-type="bug"
+                 data-search="bug-55 sprint 3 bug cosmic warfare: carga infinita + ux códigos sala testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">BUG-55</span>
+              <span class="type-pill bug">Bug</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Cosmic Warfare: carga infinita + UX códigos sala</h3>
+            <p>22/04 → 22/04 · 1 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar bug" style="left:88.0952%; width:2.3810%">
+              <span>1D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>1</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 3"
+                 data-type="story"
+                 data-search="scrum-41 sprint 3 story chat se abre automáticamente al iniciar partida online testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">SCRUM-41</span>
+              <span class="type-pill story">Story</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Chat se abre automáticamente al iniciar partida online</h3>
+            <p>23/04 → 24/04 · 2 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar story" style="left:90.4762%; width:4.7619%">
+              <span>2D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>2</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 3"
+                 data-type="bug"
+                 data-search="bug-56 sprint 3 bug elo matchmaking: doble registro, abandon race, secuencia testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">BUG-56</span>
+              <span class="type-pill bug">Bug</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>ELO matchmaking: doble registro, abandon race, secuencia</h3>
+            <p>24/04 → 24/04 · 1 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar bug" style="left:92.8571%; width:2.3810%">
+              <span>1D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>1</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+        <article class="mission-row"
+                 data-sprint="Sprint 3"
+                 data-type="bug"
+                 data-search="bug-57 sprint 3 bug leaderboard: caché stale + fallos de índice firebase (orderbychild) testeo/cierre done">
+          <div class="mission-card">
+            <div class="mission-meta">
+              <span class="mission-id">BUG-57</span>
+              <span class="type-pill bug">Bug</span>
+              <span class="phase-pill">Testeo/Cierre</span>
+            </div>
+            <h3>Leaderboard: caché stale + fallos de índice Firebase (orderByChild)</h3>
+            <p>25/04 → 25/04 · 1 días</p>
+          </div>
+
+          <div class="space-track">
+            <div class="bar bug" style="left:95.2381%; width:2.3810%">
+              <span>1D</span>
+            </div>
+          </div>
+
+          <div class="mission-score">
+            <strong>1</strong>
+            <span>DAYS</span>
+          </div>
+        </article>
+        
+      </div>
+    </section>
+    
+
+    <div class="empty" id="emptyState">No hay misiones en este sector</div>
+
+    <p class="footer">Nexus Orbit · generado desde CSV de tareas normalizadas</p>
+  </main>
+
+  <script>
+    const starsContainer = document.getElementById("stars");
+    const starCount = 150;
+
+    for (let i = 0; i < starCount; i++) {
+      const star = document.createElement("span");
+      star.className = "star" + (Math.random() > .86 ? " big" : "");
+      star.style.left = Math.random() * 100 + "%";
+      star.style.top = Math.random() * 100 + "%";
+      star.style.animationDuration = (5 + Math.random() * 12) + "s";
+      star.style.animationDelay = (-Math.random() * 12) + "s";
+      star.style.opacity = (.25 + Math.random() * .75).toFixed(2);
+      starsContainer.appendChild(star);
+    }
+
+    const sprintButtons = Array.from(document.querySelectorAll(".nav-filter"));
+    const typeButtons = Array.from(document.querySelectorAll(".type-filter"));
+    const rows = Array.from(document.querySelectorAll(".mission-row"));
+    const sectors = Array.from(document.querySelectorAll(".sector"));
+    const searchInput = document.getElementById("searchInput");
+    const visibleCounter = document.getElementById("visibleCounter");
+    const emptyState = document.getElementById("emptyState");
+    const timelinePage = document.getElementById("timeline");
+    const teamSection = document.getElementById("equipo");
+    const carousel = document.querySelector(".team-carousel");
+    const carouselSlides = Array.from(document.querySelectorAll(".carousel-slide"));
+    const carouselDots = Array.from(document.querySelectorAll(".carousel-dot"));
+    const carouselPrev = document.querySelector('[data-carousel="prev"]');
+    const carouselNext = document.querySelector('[data-carousel="next"]');
+
+    let activeSprint = "all";
+    let activeType = "all";
+    let activeCarouselSlide = 0;
+    let carouselTimer;
+
+    function syncPageView() {
+      const showTeam = window.location.hash === "#equipo";
+      document.body.classList.toggle("team-view", showTeam);
+
+      requestAnimationFrame(() => {
+        if (showTeam && teamSection) {
+          teamSection.scrollIntoView({ block: "start" });
+        } else if (timelinePage) {
+          timelinePage.scrollIntoView({ block: "start" });
+        }
+      });
+    }
+
+    function showCarouselSlide(index) {
+      if (!carouselSlides.length) return;
+
+      activeCarouselSlide = (index + carouselSlides.length) % carouselSlides.length;
+
+      carouselSlides.forEach((slide, slideIndex) => {
+        slide.classList.toggle("active", slideIndex === activeCarouselSlide);
+      });
+
+      carouselDots.forEach((dot, dotIndex) => {
+        dot.classList.toggle("active", dotIndex === activeCarouselSlide);
+      });
+    }
+
+    function nextCarouselSlide() {
+      showCarouselSlide(activeCarouselSlide + 1);
+    }
+
+    function startCarousel() {
+      if (!carouselSlides.length) return;
+      clearInterval(carouselTimer);
+      carouselTimer = setInterval(nextCarouselSlide, 5200);
+    }
+
+    function updateButtons(buttons, value, key) {
+      buttons.forEach(btn => btn.classList.toggle("active", btn.dataset[key] === value));
+    }
+
+    function updateView() {
+      const query = searchInput.value.trim().toLowerCase();
+      let visible = 0;
+
+      rows.forEach(row => {
+        const okSprint = activeSprint === "all" || row.dataset.sprint === activeSprint;
+        const okType = activeType === "all" || row.dataset.type === activeType;
+        const okSearch = !query || row.dataset.search.includes(query);
+        const show = okSprint && okType && okSearch;
+
+        row.classList.toggle("is-hidden", !show);
+        if (show) visible++;
+      });
+
+      sectors.forEach(sector => {
+        const sectorRows = Array.from(sector.querySelectorAll(".mission-row"));
+        const hasVisible = sectorRows.some(row => !row.classList.contains("is-hidden"));
+        sector.style.display = hasVisible ? "" : "none";
+      });
+
+      visibleCounter.textContent = visible + (visible === 1 ? " misión visible" : " misiones visibles");
+      emptyState.classList.toggle("show", visible === 0);
+    }
+
+    sprintButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        activeSprint = btn.dataset.sprint;
+        if (window.location.hash === "#equipo") {
+          window.location.hash = "timeline";
+        }
+        updateButtons(sprintButtons, activeSprint, "sprint");
+        updateView();
+      });
+    });
+
+    typeButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        activeType = btn.dataset.type;
+        updateButtons(typeButtons, activeType, "type");
+        updateView();
+      });
+    });
+
+    searchInput.addEventListener("input", updateView);
+    window.addEventListener("hashchange", syncPageView);
+    carouselPrev?.addEventListener("click", () => {
+      showCarouselSlide(activeCarouselSlide - 1);
+      startCarousel();
+    });
+    carouselNext?.addEventListener("click", () => {
+      nextCarouselSlide();
+      startCarousel();
+    });
+    carouselDots.forEach(dot => {
+      dot.addEventListener("click", () => {
+        showCarouselSlide(Number(dot.dataset.slide));
+        startCarousel();
+      });
+    });
+    carousel?.addEventListener("mouseenter", () => clearInterval(carouselTimer));
+    carousel?.addEventListener("mouseleave", startCarousel);
+    updateView();
+    syncPageView();
+    startCarousel();
+  </script>
+</body>
+</html>
